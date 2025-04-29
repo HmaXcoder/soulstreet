@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -25,11 +26,6 @@ func NewProductHandler (productService service.ProductService) *ProductHandler {
 }
 
 func (h *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
-	
-	if r.Method != http.MethodPost {
-		json.SendJsonError(w, http.StatusMethodNotAllowed, errors.New("Metodo não permitido!"))
-		return
-	}
 	
 	r.ParseMultipartForm(10 << 20)
 	name := r.FormValue("name")
@@ -76,4 +72,35 @@ func (h *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	json.SendJson(w, http.StatusCreated, product)
+}
+
+
+func (h *ProductHandler) GetByID(w http.ResponseWriter, r *http.Request) {
+	idStr := r.URL.Query().Get("id")
+	if idStr == "" {
+	json.SendJsonError(w, http.StatusBadRequest, errors.New("Query 'id' em branco"))
+	return
+	}
+	id, err := strconv.ParseInt(idStr, 10, 32)
+	if err != nil {
+		json.SendJsonError(w, http.StatusBadRequest, errors.New("Erro ao parsear 'id'"))
+		return
+	}
+	product, err := h.productService.GetProductByID(int(id))
+	if err != nil {
+		json.SendJsonError(w, http.StatusBadRequest, fmt.Errorf("error: %v", err))
+		return
+	}
+	json.SendJson(w, http.StatusOK, product)
+
+}
+
+
+func (h *ProductHandler) GetAll(w http.ResponseWriter, r *http.Request) {
+	products, err := h.productService.GetAll()
+	if err != nil {
+		json.SendJsonError(w, http.StatusInternalServerError, err)
+		return
+	}
+	json.SendJson(w, http.StatusOK, products)
 }
