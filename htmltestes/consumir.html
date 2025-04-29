@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Lista de Produtos</title>
+  <style>
+    .product-card {
+      border: 1px solid #ddd;
+      padding: 20px;
+      margin: 10px;
+      border-radius: 5px;
+      display: inline-block;
+      width: 220px;
+      text-align: center;
+      position: relative;
+      cursor: pointer;
+      transition: box-shadow 0.2s ease;
+    }
+
+    .product-card:hover {
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .product-card img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 5px;
+    }
+
+    .product-card h2 {
+      font-size: 18px;
+      margin: 10px 0;
+    }
+
+    .product-card p {
+      font-size: 14px;
+      color: #555;
+    }
+
+    .product-card .price {
+      font-size: 16px;
+      font-weight: bold;
+      color: green;
+    }
+
+    .nav-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 5px;
+    }
+
+    .nav-buttons button {
+      background-color: #eee;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      padding: 5px 10px;
+      font-size: 18px;
+    }
+
+    .product-card .available {
+      font-size: 14px;
+      color: #555;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Lista de Produtos</h1>
+  <div id="product-list"></div>
+
+  <script>
+    async function loadProducts() {
+      try {
+        const response = await fetch("http://localhost:8080/products");
+        if (!response.ok) {
+          throw new Error("Erro ao carregar produtos");
+        }
+        const products = await response.json();
+        displayProducts(products);
+      } catch (error) {
+        console.error("Erro:", error);
+        alert("Erro ao carregar os produtos");
+      }
+    }
+
+    function displayProducts(products) {
+      const productList = document.getElementById("product-list");
+      productList.innerHTML = "";
+
+      products.forEach(product => {
+        const card = document.createElement("div");
+        card.classList.add("product-card");
+
+        // Redireciona ao clicar no card
+        card.onclick = () => {
+          window.location.href = `product.html?id=${product.id}`;
+
+        };
+
+        const images = JSON.parse(product.images);
+        let currentImageIndex = 0;
+
+        const imgElement = document.createElement("img");
+        imgElement.src = `http://localhost:8080/images/${images[0].split("/").pop()}`;
+        imgElement.alt = product.name;
+
+        const nameElement = document.createElement("h2");
+        nameElement.textContent = product.name;
+
+        const priceElement = document.createElement("p");
+        priceElement.className = "price";
+        priceElement.textContent = `R$ ${product.price.toFixed(2)}`;
+
+        const availableElement = document.createElement("p");
+        availableElement.className = "available";
+        availableElement.textContent = product.is_avaliable ? "Disponível" : "Indisponível";
+
+        const nav = document.createElement("div");
+        nav.className = "nav-buttons";
+
+        const prevBtn = document.createElement("button");
+        prevBtn.innerHTML = "‹";
+        prevBtn.onclick = (e) => {
+          e.stopPropagation();
+          currentImageIndex = (currentImageIndex - 1 + images.length) % images.length;
+          imgElement.src = `http://localhost:8080/images/${images[currentImageIndex].split("/").pop()}`;
+        };
+
+        const nextBtn = document.createElement("button");
+        nextBtn.innerHTML = "›";
+        nextBtn.onclick = (e) => {
+          e.stopPropagation();
+          currentImageIndex = (currentImageIndex + 1) % images.length;
+          imgElement.src = `http://localhost:8080/images/${images[currentImageIndex].split("/").pop()}`;
+        };
+
+        nav.appendChild(prevBtn);
+        nav.appendChild(nextBtn);
+
+        card.appendChild(imgElement);
+        card.appendChild(nav);
+        card.appendChild(nameElement);
+        card.appendChild(priceElement);
+        card.appendChild(availableElement);
+
+        productList.appendChild(card);
+      });
+    }
+
+    window.onload = loadProducts;
+  </script>
+</body>
+</html>

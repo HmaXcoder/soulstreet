@@ -11,7 +11,7 @@ import (
 	"soulstreet/internal/service"
 	"soulstreet/pkg/json"
 	"strconv"
-
+	jsoncode "encoding/json"
 	"github.com/google/uuid"
 )
 
@@ -59,18 +59,27 @@ func (h *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 			json.SendJsonError(w, http.StatusInternalServerError, errors.New("Erro ao escrever imagem"))
 			return
 		}
-		imagesPaths = append(imagesPaths, savePath)
+		imgDir := "/images/" + newFileName
+		imagesPaths = append(imagesPaths, imgDir)
+	}
+	imagesPathsJson, err := jsoncode.Marshal(imagesPaths)
+	if err != nil {
+		json.SendJsonError(w, http.StatusInternalServerError, errors.New("Erro ao converter array de imagem em json"))
+		return
 	}
 	product := model.Product {
 		Name: name,
 		Price: float32(price),
-		Images: imagesPaths,
+		Images: string(imagesPathsJson),
 	}
+	
 	err = h.productService.CreateProduct(&product)
 	if err != nil {
 		json.SendJsonError(w, http.StatusInternalServerError, errors.New("Erro ao salvar produto"))
+		fmt.Println(err)
 		return
 	}
+	fmt.Println(product)
 	json.SendJson(w, http.StatusCreated, product)
 }
 

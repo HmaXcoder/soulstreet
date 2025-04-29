@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Detalhes do Produto</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f8f9fa;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 30px;
+    }
+
+    .image-section {
+      flex: 1 1 300px;
+      text-align: center;
+    }
+
+    .image-section img {
+      max-width: 100%;
+      border-radius: 10px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    }
+
+    .nav-buttons {
+      margin-top: 10px;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .nav-buttons button {
+      background-color: #ddd;
+      border: none;
+      padding: 8px 14px;
+      font-size: 18px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .details-section {
+      flex: 1 1 400px;
+    }
+
+    .details-section h1 {
+      font-size: 28px;
+      margin-bottom: 15px;
+      color: #333;
+    }
+
+    .details-section .price {
+      font-size: 26px;
+      color: green;
+      margin-bottom: 10px;
+    }
+
+    .details-section .available {
+      font-size: 16px;
+      margin-bottom: 10px;
+      color: #666;
+    }
+
+    .details-section .description {
+      margin-top: 15px;
+      font-size: 15px;
+      line-height: 1.6;
+      color: #444;
+    }
+
+    .buy-section {
+      margin-top: 25px;
+    }
+
+    .buy-button {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      font-size: 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .buy-button:hover {
+      background-color: #218838;
+    }
+
+    .extra-info {
+      font-size: 14px;
+      color: #555;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="product-detail">
+    <p>Carregando produto...</p>
+  </div>
+
+  <script>
+    async function loadProduct() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const id = urlParams.get("id");
+
+      if (!id) {
+        document.getElementById("product-detail").innerHTML = "<p>ID do produto não fornecido.</p>";
+        return;
+      }
+
+      try {
+        const response = await fetch(`http://localhost:8080/product?id=${id}`);
+        if (!response.ok) throw new Error("Produto não encontrado");
+
+        const product = await response.json();
+        const container = document.getElementById("product-detail");
+        container.innerHTML = "";
+
+        const images = JSON.parse(product.images);
+        let currentImageIndex = 0;
+
+        const imageSection = document.createElement("div");
+        imageSection.className = "image-section";
+
+        const img = document.createElement("img");
+        img.src = `http://localhost:8080/images/${images[0].split("/").pop()}`;
+        img.alt = product.name;
+
+        const nav = document.createElement("div");
+        nav.className = "nav-buttons";
+
+        const prevBtn = document.createElement("button");
+        prevBtn.textContent = "‹";
+        prevBtn.onclick = () => {
+          currentImageIndex = (currentImageIndex - 1 + images.length) % images.length;
+          img.src = `http://localhost:8080/images/${images[currentImageIndex].split("/").pop()}`;
+        };
+
+        const nextBtn = document.createElement("button");
+        nextBtn.textContent = "›";
+        nextBtn.onclick = () => {
+          currentImageIndex = (currentImageIndex + 1) % images.length;
+          img.src = `http://localhost:8080/images/${images[currentImageIndex].split("/").pop()}`;
+        };
+
+        nav.appendChild(prevBtn);
+        nav.appendChild(nextBtn);
+        imageSection.appendChild(img);
+        imageSection.appendChild(nav);
+
+        const detailsSection = document.createElement("div");
+        detailsSection.className = "details-section";
+
+        const name = document.createElement("h1");
+        name.textContent = product.name;
+
+        const price = document.createElement("p");
+        price.className = "price";
+        price.textContent = `R$ ${product.price.toFixed(2)}`;
+
+        const available = document.createElement("p");
+        available.className = "available";
+        available.textContent = product.is_avaliable ? "Disponível para venda" : "Indisponível no momento";
+
+        const description = document.createElement("p");
+        description.className = "description";
+        description.textContent = "IMAGEM REAL DO PRODUTO."
+
+        const buySection = document.createElement("div");
+        buySection.className = "buy-section";
+
+        const buyButton = document.createElement("button");
+        buyButton.className = "buy-button";
+        buyButton.textContent = "Comprar agora";
+
+        const extraInfo = document.createElement("div");
+        extraInfo.className = "extra-info";
+        extraInfo.innerHTML = `
+          Frete grátis para todo o Brasil<br>
+          Parcelamento em até 12x sem juros
+        `;
+
+        buySection.appendChild(buyButton);
+        buySection.appendChild(extraInfo);
+
+        detailsSection.appendChild(name);
+        detailsSection.appendChild(price);
+        detailsSection.appendChild(available);
+        detailsSection.appendChild(description);
+        detailsSection.appendChild(buySection);
+
+        container.className = "container";
+        container.appendChild(imageSection);
+        container.appendChild(detailsSection);
+
+      } catch (error) {
+        document.getElementById("product-detail").innerHTML = "<p>Erro ao carregar o produto.</p>";
+      }
+    }
+
+    window.onload = loadProduct;
+  </script>
+</body>
+</html>

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"soulstreet/internal/config/cors"
 	"soulstreet/internal/config/db"
 	"soulstreet/internal/handler"
 	"soulstreet/internal/repository"
@@ -22,12 +23,17 @@ func main() {
 	service := service.NewProductService(repo)
 	handler := handler.NewProductHandler(*service)
 	
-	http.HandleFunc("POST /products", handler.CreateProduct)
-	http.HandleFunc("GET /products", handler.GetAll)
-	http.HandleFunc("GET /product", handler.GetByID)
+	mux := http.NewServeMux()
+	
+	mux.HandleFunc("POST /product", handler.CreateProduct)
+	mux.HandleFunc("GET /products", handler.GetAll)
+	mux.HandleFunc("GET /product", handler.GetByID)
+	mux.Handle("GET /images/", http.StripPrefix("/images/", http.FileServer(http.Dir("uploads"))))
 
 	
 	fmt.Println("Servidor rodando http://localhost:8080")
 	
-	http.ListenAndServe(":8080", nil)
+	handlerCors := cors.CORS()(mux)
+	
+	http.ListenAndServe(":8080", handlerCors)
 }

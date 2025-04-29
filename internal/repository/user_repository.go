@@ -22,7 +22,7 @@ func NewProductRepositoryDB(db *sql.DB) ProductRepository {
 }
 
 func (r *productRepositoryDB) Create(product *model.Product) error {
-	query := "INSERT INTO products (name, price, images, avaliable) VALUES (?,?,?,?)"
+	query := "INSERT INTO products (name, price, images) VALUES (?,?,?)"
 	_, err := r.db.Exec(query, product.Name, product.Price, product.Images, product.IsAvaliable)
 	if err != nil {
 		return err
@@ -32,7 +32,7 @@ func (r *productRepositoryDB) Create(product *model.Product) error {
 
 func (r *productRepositoryDB) GetByID(id int) (*model.Product, error) {
 	var product model.Product
-	query := "SELECT id, name, price, images, avaliable FROM products WHERE id = ?"
+	query := "SELECT id, name, price, images, is_avaliable FROM products WHERE id = ?"
 	err := r.db.QueryRow(query, id).Scan(&product.ID, &product.Name, &product.Price, &product.Images, &product.IsAvaliable)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -45,7 +45,7 @@ func (r *productRepositoryDB) GetByID(id int) (*model.Product, error) {
 
 func (r *productRepositoryDB) GetAll() ([]model.Product, error) {
 	var products []model.Product
-	rows, err := r.db.Query("SELECT id, name, price, images, avaliable FROM products")
+	rows, err := r.db.Query("SELECT id, name, price, images, is_avaliable FROM products")
 	if err != nil {
 		return nil, err
 	}
